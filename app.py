@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 load_dotenv()
 api_key = os.getenv("GOOGLE_API_KEY")
 if not api_key:
-    api_key = "put api key"  # Fallback to the provided key
+    api_key = "put_your_api_key_here"  # Fallback to the provided key
 genai.configure(api_key=api_key)
 
 #read each page of pdf and extract all text
@@ -77,8 +77,8 @@ def user_input(user_question):
             {"input_documents": docs, "question": user_question}, #context + que ->LLM->
             return_only_outputs=True)
         
-        # return response["outpurt_text"]
-        return st.write("Reply: ", response["output_text"])#***************************put bot assist emogi
+        return response["output_text"]#return answer from LLM
+        # return st.write("user", response["output_text"])#*#return answer from LLM
     except Exception as e:
         st.error(f"Error processing your question: {str(e)}")
         print(f"Error details: {e}")
@@ -88,34 +88,38 @@ def main():
     st.set_page_config(page_title="Chat PDF")
 
     # # Initialize session state for chat history if it doesn't exist
-    # if 'chat_history' not in st.session_state:
-    #   st.session_state.chat_history = []
+    if "chat_history" not in st.session_state:
+      st.session_state.chat_history = []
 
-    st.header("Chat with PDF using Gemini💁")
-    # Display chat history
-    # chat_container = st.container()
+    # st.header("Chat with PDF using Gemini💁")
+    st.title("Help_Buddy: A virtual Assistant")
+    st.subheader("Welcome 💁 to Aliah University student helpdesk")
+    #display chat history from history on app rerun
+    for chat_history in st.session_state.chat_history:
+        with st.chat_message(chat_history["role"]):
+            st.markdown(chat_history["content"])
 
     # Input area
-    user_question = st.text_input("Ask a Question from the PDF Files")
+    # user_question = st.text_input("Ask a Question from the PDF Files")
+    if user_question := st.chat_input("Ask your Question related to.. "):
+        # Add user question to chat history
+        st.session_state.chat_history.append({"role": "user", "content": user_question})
+        with st.chat_message("user"):
+            st.markdown(user_question)
+
+        # Get answer from the model
 
     if user_question:
-       answer= user_input(user_question)
+        answer=user_input(user_question)
+        with st.chat_message("assistant"):
+           st.session_state.chat_history.append({"role": "assistant", "content": answer})  # Add answer to chat history
+           st.markdown(answer)  # Display the answer in the chat message
+        
+           
 
-       #add qna pair to chat history
-    #    st.session_state.chat_history.append({"question":user_question, "answer":answer})
-
-       #clear input box after submitting
-    #    st.rerun()
-
-    #     # Display chat history in the container
-    # with chat_container:
-    #     for i, chat in enumerate(st.session_state.chat_history):
-    #         st.markdown(f"**Question {i+1}:** {chat['question']}")
-    #         st.markdown(f"**Answer:** {chat['answer']}")
-    #         st.markdown("---")
-
+# Sidebar for uploading PDF files
     with st.sidebar:
-        st.title("Menu:")
+        st.title("Content:")
         pdf_docs = st.file_uploader("Upload your PDF Files and Click on the Submit & Process Button", accept_multiple_files=True)
         if st.button("Submit & Process"):
             if not pdf_docs:
@@ -139,8 +143,7 @@ def main():
             # right: 10px;
             left :10px;
             font-size: 12px;
-            # color: #960f0f;
-            color: #070707;
+            color: light-dark(#333, #fff);
             font-weight: bold;
         }
         </style>
